@@ -358,6 +358,28 @@ footer {
   100% { opacity: 0; transform: translate(-50%, -60px); }
 }
 
+.logo { -webkit-touch-callout: none; touch-action: manipulation; }
+
+.oiia {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(251, 247, 238, .85);
+  cursor: pointer;
+}
+.oiia img {
+  width: min(70vw, 320px);
+  height: auto;
+  animation: oiia-spin .45s linear infinite;
+}
+@keyframes oiia-spin {
+  from { transform: perspective(800px) rotateY(0deg); }
+  to { transform: perspective(800px) rotateY(360deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .runner, .oneup { animation-duration: .01s; }
 }

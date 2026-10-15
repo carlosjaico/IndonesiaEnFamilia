@@ -71,6 +71,7 @@ function renderHome() {
     <footer>${VIAJE.resumen}</footer>
   `;
   setupLogoEgg();
+  setupOiiaEgg();
 }
 
 function renderPlan(id) {
@@ -190,7 +191,51 @@ function setupLogoEgg() {
   });
 }
 
-// 2) Código Konami en teclado: ↑↑↓↓←→←→BA
+// 2) Mantén pulsado el volcán 2 segundos → OIIA cat
+const OIIA_GIF = "https://media.giphy.com/media/ztisqLhP99tVSHG136/giphy.webp";
+const OIIA_MP3 = "https://www.myinstants.com/media/sounds/oiiaioiiiai-cat.mp3";
+let oiiaAudio;
+
+function setupOiiaEgg() {
+  const logo = document.getElementById("logo");
+  if (!logo) return;
+  let timer;
+  logo.addEventListener("contextmenu", (e) => e.preventDefault());
+  logo.addEventListener("pointerdown", () => {
+    // iOS solo deja sonar audio iniciado dentro del gesto: arrancamos en silencio y luego activamos
+    oiiaAudio = oiiaAudio || new Audio(OIIA_MP3);
+    oiiaAudio.muted = true;
+    oiiaAudio.currentTime = 0;
+    oiiaAudio.play().catch(() => {});
+    timer = setTimeout(showOiia, 2000);
+  });
+  const cancel = () => {
+    clearTimeout(timer);
+    if (oiiaAudio && oiiaAudio.muted) oiiaAudio.pause();
+  };
+  logo.addEventListener("pointerup", cancel);
+  logo.addEventListener("pointerleave", cancel);
+  logo.addEventListener("pointercancel", cancel);
+}
+
+function showOiia() {
+  if (document.querySelector(".oiia")) return;
+  const box = document.createElement("div");
+  box.className = "oiia";
+  box.innerHTML = `<img src="${OIIA_GIF}" alt="OIIA cat">`;
+  document.body.append(box);
+  oiiaAudio.currentTime = 0;
+  oiiaAudio.muted = false;
+  oiiaAudio.play().catch(() => {});
+  const close = () => {
+    box.remove();
+    oiiaAudio.pause();
+  };
+  box.addEventListener("click", close);
+  oiiaAudio.onended = close;
+}
+
+// 3) Código Konami en teclado: ↑↑↓↓←→←→BA
 const KONAMI = ["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","b","a"];
 let kpos = 0;
 window.addEventListener("keydown", (e) => {
