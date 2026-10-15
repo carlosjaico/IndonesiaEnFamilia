@@ -195,9 +195,9 @@ function setupLogoEgg() {
 //    y aparece "DIEGO NO PULSES AQUI" durante 5 s. Si lo pulsa → OIIA cat.
 const OIIA_GIF = "https://media.giphy.com/media/ztisqLhP99tVSHG136/giphy.webp";
 const OIIA_MP3 = "https://www.myinstants.com/media/sounds/oiiaioiiiai-cat.mp3";
-const OIIA_SPEED = 1.5;
+const OIIA_SPEED = 1.15;
 const OIIA_LOOPS = 2;
-const TRAP_SECONDS = 5;
+const TRAP_SECONDS = 2.5;
 
 let trap = null;
 
