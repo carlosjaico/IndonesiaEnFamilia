@@ -358,8 +358,6 @@ footer {
   100% { opacity: 0; transform: translate(-50%, -60px); }
 }
 
-.logo { -webkit-touch-callout: none; touch-action: manipulation; }
-
 .oiia {
   position: fixed;
   inset: 0;
@@ -373,12 +371,49 @@ footer {
 .oiia img {
   width: min(70vw, 320px);
   height: auto;
-  animation: oiia-spin .45s linear infinite;
+  animation: oiia-spin .3s linear infinite;
 }
 @keyframes oiia-spin {
   from { transform: perspective(800px) rotateY(0deg); }
   to { transform: perspective(800px) rotateY(360deg); }
 }
+
+html.locked, html.locked body { overflow: hidden; }
+
+.trap {
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(31, 35, 48, .35);
+}
+.trap-btn {
+  position: relative;
+  font-family: var(--pixel);
+  font-size: 18px;
+  line-height: 1.7;
+  color: #fff;
+  background: #e63946;
+  padding: 22px 24px 28px;
+  cursor: pointer;
+  animation: trap-pop .25s steps(3) both, trap-shake .6s steps(2) .25s infinite;
+}
+.trap-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 6px;
+  width: 100%;
+  background: #ffd23f;
+  transform-origin: left;
+  animation: trap-time linear forwards;
+}
+@keyframes trap-pop { from { transform: scale(.4); } to { transform: scale(1); } }
+@keyframes trap-shake { 50% { transform: rotate(-2deg); } }
+@keyframes trap-time { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
 @media (prefers-reduced-motion: reduce) {
   .runner, .oneup { animation-duration: .01s; }

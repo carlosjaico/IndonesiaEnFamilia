@@ -71,7 +71,6 @@ function renderHome() {
     <footer>${VIAJE.resumen}</footer>
   `;
   setupLogoEgg();
-  setupOiiaEgg();
 }
 
 function renderPlan(id) {
@@ -140,11 +139,12 @@ function renderPlan(id) {
 // ---------- Router ----------
 function route() {
   const m = location.hash.match(/^#\/plan\/(\w+)/);
+  clearDiegoTrap();
   m ? renderPlan(m[1]) : renderHome();
   window.scrollTo(0, 0);
+  if (m) setTimeout(setupDiegoTrap, 300);
 }
 window.addEventListener("hashchange", route);
-route();
 
 // ---------- Easter eggs ----------
 let audioCtx;
@@ -191,48 +191,99 @@ function setupLogoEgg() {
   });
 }
 
-// 2) Mantén pulsado el volcán 2 segundos → OIIA cat
+// 2) Trampa para Diego: en un mundo, a mitad de scroll aleatoria, se bloquea el scroll
+//    y aparece "DIEGO NO PULSES AQUI" durante 5 s. Si lo pulsa → OIIA cat.
 const OIIA_GIF = "https://media.giphy.com/media/ztisqLhP99tVSHG136/giphy.webp";
 const OIIA_MP3 = "https://www.myinstants.com/media/sounds/oiiaioiiiai-cat.mp3";
-let oiiaAudio;
+const OIIA_SPEED = 1.5;
+const OIIA_LOOPS = 2;
+const TRAP_SECONDS = 5;
 
-function setupOiiaEgg() {
-  const logo = document.getElementById("logo");
-  if (!logo) return;
-  let timer;
-  logo.addEventListener("contextmenu", (e) => e.preventDefault());
-  logo.addEventListener("pointerdown", () => {
-    // iOS solo deja sonar audio iniciado dentro del gesto: arrancamos en silencio y luego activamos
-    oiiaAudio = oiiaAudio || new Audio(OIIA_MP3);
-    oiiaAudio.muted = true;
-    oiiaAudio.currentTime = 0;
-    oiiaAudio.play().catch(() => {});
-    timer = setTimeout(showOiia, 2000);
-  });
-  const cancel = () => {
-    clearTimeout(timer);
-    if (oiiaAudio && oiiaAudio.muted) oiiaAudio.pause();
+let trap = null;
+
+function blockScroll(e) { e.preventDefault(); }
+function lockScroll(on) {
+  document.documentElement.classList.toggle("locked", on);
+  const opts = { passive: false };
+  if (on) {
+    window.addEventListener("touchmove", blockScroll, opts);
+    window.addEventListener("wheel", blockScroll, opts);
+  } else {
+    window.removeEventListener("touchmove", blockScroll, opts);
+    window.removeEventListener("wheel", blockScroll, opts);
+  }
+}
+
+function setupDiegoTrap() {
+  clearDiegoTrap();
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  if (max < 600) return;
+  // punto aleatorio entre el 20% y el 70% de la página
+  const at = max * (0.2 + Math.random() * 0.5);
+  const onScroll = () => {
+    if (window.scrollY < at) return;
+    window.removeEventListener("scroll", onScroll);
+    showTrap();
   };
-  logo.addEventListener("pointerup", cancel);
-  logo.addEventListener("pointerleave", cancel);
-  logo.addEventListener("pointercancel", cancel);
+  trap = { onScroll };
+  window.addEventListener("scroll", onScroll, { passive: true });
+}
+
+function clearDiegoTrap() {
+  if (!trap) return;
+  window.removeEventListener("scroll", trap.onScroll);
+  clearTimeout(trap.timer);
+  document.querySelector(".trap")?.remove();
+  lockScroll(false);
+  trap = null;
+}
+
+function showTrap() {
+  lockScroll(true);
+  const box = document.createElement("div");
+  box.className = "trap";
+  box.innerHTML = `
+    <button class="trap-btn px" type="button">
+      DIEGO<br>NO PULSES<br>AQUI
+      <span class="trap-bar" style="animation-duration:${TRAP_SECONDS}s"></span>
+    </button>`;
+  document.body.append(box);
+  box.querySelector(".trap-btn").addEventListener("click", () => {
+    clearTimeout(trap.timer);
+    box.remove();
+    showOiia();
+  });
+  trap.timer = setTimeout(() => {
+    box.remove();
+    lockScroll(false);
+  }, TRAP_SECONDS * 1000);
 }
 
 function showOiia() {
-  if (document.querySelector(".oiia")) return;
   const box = document.createElement("div");
   box.className = "oiia";
   box.innerHTML = `<img src="${OIIA_GIF}" alt="OIIA cat">`;
   document.body.append(box);
-  oiiaAudio.currentTime = 0;
-  oiiaAudio.muted = false;
-  oiiaAudio.play().catch(() => {});
+
+  // Se crea dentro del toque para que iOS deje sonar el audio
+  const audio = new Audio(OIIA_MP3);
+  audio.playbackRate = OIIA_SPEED;
+  audio.preservesPitch = false;
+  audio.webkitPreservesPitch = false;
+  let loops = 1;
   const close = () => {
+    audio.pause();
     box.remove();
-    oiiaAudio.pause();
+    lockScroll(false);
   };
+  audio.addEventListener("ended", () => {
+    if (loops++ < OIIA_LOOPS) {
+      audio.currentTime = 0;
+      audio.play().catch(close);
+    } else close();
+  });
   box.addEventListener("click", close);
-  oiiaAudio.onended = close;
+  audio.play().catch(() => setTimeout(close, 3000));
 }
 
 // 3) Código Konami en teclado: ↑↑↓↓←→←→BA
@@ -242,3 +293,6 @@ window.addEventListener("keydown", (e) => {
   kpos = e.key.toLowerCase() === KONAMI[kpos].toLowerCase() ? kpos + 1 : (e.key === "ArrowUp" ? 1 : 0);
   if (kpos === KONAMI.length) { kpos = 0; monkeyRun("+30 VIDAS"); }
 });
+
+// ---------- Arranque ----------
+route();
